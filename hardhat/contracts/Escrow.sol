@@ -5,13 +5,13 @@ pragma solidity ^0.8.14;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./IPOOL.sol";
+import "./IPool.sol";
 
 contract Escrow is Ownable, AccessControl {
-    address depositor;
-    address beneficiary;
-    uint amount;
-    uint deadline;
+    address public depositor;
+    address public beneficiary;
+    uint public amount;
+    uint public deadline;
     bytes32 public constant KEEPER = keccak256("KEEPER");
 
     IPOOL pool = IPOOL(0xE0fBa4Fc209b4948668006B2bE61711b7f465bAe);
@@ -22,7 +22,7 @@ contract Escrow is Ownable, AccessControl {
     constructor(address _beneficiary, uint _amount, uint _deadline) {
         amount = _amount;
         deadline = block.timestamp + _deadline;
-        depositor = msg.sender; // **change when created by contract factory
+        depositor = tx.origin;
         beneficiary = _beneficiary;
 
         // deposit the money in pool
@@ -47,11 +47,16 @@ contract Escrow is Ownable, AccessControl {
         require(block.timestamp > deadline, "Active Escrow");
         pool.withdraw(address(dai), type(uint).max, depositor);
     }
- 
+
 }
 
 contract EscrowFactory {
-    // store all contracts? // associate contract to an address for retrieval ?
+    Escrow[] public allEscrows;
 
-    function createEscrow() external {}
+    function createEscrow(address _beneficiary, uint _amount, uint _deadline) external {
+        Escrow newEscrow = new Escrow(_beneficiary, _amount, _deadline);
+
+        // store contract created
+        allEscrows.push(newEscrow);
+    }
 }
