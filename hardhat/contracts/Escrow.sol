@@ -51,12 +51,14 @@ contract Escrow is Ownable, AccessControl {
 }
 
 contract EscrowFactory {
-    Escrow[] public allEscrows;
+    event EscrowCreated(address indexed depositor, address beneficiary, uint amount);
 
     function createEscrow(address _beneficiary, uint _amount, uint _deadline) external {
-        Escrow newEscrow = new Escrow(_beneficiary, _amount, _deadline);
+        new Escrow(_beneficiary, _amount, _deadline);
 
-        // store contract created
-        allEscrows.push(newEscrow);
+        // gas optimization: emit event instead of storing in array
+        // emit EscrowCreated(address ,_beneficiary,_amount);
     }
 }
+
+// look into clone proxy
